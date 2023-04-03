@@ -15,12 +15,30 @@ app.post('/totalBudget', (req, res, next) => {
     else {
         res.status(404).send('Budget not valid');
     }
+    next();
 })
 
-// app.post('/envelope', (req, res, next) => {
-//     const newEnvelope = req.body;
+// creates a new envelope with name and money and adds it to the budget
+app.post('/envelope', (req, res, next) => {
+    const newEnvelope = req.body;
+    if (!newEnvelope) {
+        res.status(404).send('Envelope not valid');
+    }
+    else if (newEnvelope.money > totalBudget) {
+        res.status(404).send('Budget of envelope exceeds total budget');
+    }
+    else {
+        envelopes.push(newEnvelope);
+        res.sendStatus(201);
+    }
+    next();
+})
 
-// })
+// retrieves all envelopes
+app.get('/envelopes', (req, res, next) => {
+    res.send(envelopes);
+    next();
+})
 
 const PORT = 3000;
 app.listen(PORT, console.log('Server listening on ' + PORT));
