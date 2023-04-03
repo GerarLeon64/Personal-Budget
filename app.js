@@ -40,5 +40,17 @@ app.get('/envelopes', (req, res, next) => {
     next();
 })
 
+// retrieves an envelope by its name and total budget
+app.get('/envelope/:name', (req, res, next) => {
+    const name = req.params.name;
+    const found = envelopes.find(envelope => envelope.name === name);
+    if (found) {
+        res.send({found, 'Total budget': totalBudget});
+    }
+    else {
+        res.status(404).send('Envelope with such name not found');
+    }
+})
+
 const PORT = 3000;
 app.listen(PORT, console.log('Server listening on ' + PORT));
