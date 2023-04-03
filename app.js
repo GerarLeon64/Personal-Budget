@@ -24,7 +24,7 @@ app.post('/envelope', (req, res, next) => {
     if (!newEnvelope) {
         res.status(404).send('Envelope not valid');
     }
-    else if (newEnvelope.money > totalBudget) {
+    else if (newEnvelope.money > totalBudget) { // new envelope must be within total budget
         res.status(404).send('Budget of envelope exceeds total budget');
     }
     else {
