@@ -5,6 +5,12 @@ app.use(express.urlencoded({extended: true}));
 let envelopes = []; // individual budget envelopes (groceries, gas, clothing, etc)
 let totalBudget = 0; // total budget user is willing to spend
 
+// returns money from all envelopes
+const allMoney = () => {
+    let sum = 0;
+    envelopes.forEach(envelope => sum += envelope.money);
+    return sum;
+}
 // sets the total budget
 app.post('/totalBudget', (req, res, next) => {
     const budget = req.body.budget;
@@ -24,8 +30,8 @@ app.post('/envelope', (req, res, next) => {
     if (!newEnvelope) {
         res.status(404).send('Envelope not valid');
     }
-    else if (newEnvelope.money > totalBudget) { // new envelope must be within total budget
-        res.status(404).send('Budget of envelope exceeds total budget');
+    else if ((allMoney() + newEnvelope.money) > totalBudget) { // new envelope must be within total budget
+        res.status(404).send('Envelope cannot be added, total budget would be exceeded');
     }
     else {
         envelopes.push(newEnvelope);
@@ -55,7 +61,7 @@ app.get('/envelope/:name', (req, res, next) => {
 // withdraws a certain amount from specified envelope
 app.put('/envelope/:name/:amount', (req, res, next) => {
     const name = req.params.name;
-    const amount = req.params.amount;
+    const amount = parseInt(req.params.amount);
     const found = envelopes.find(envelope => envelope.name === name);
     if (found) {
         if (found.money >= amount) {
@@ -65,6 +71,41 @@ app.put('/envelope/:name/:amount', (req, res, next) => {
         else {
             res.status(404).send('Amount to withdraw exceeds money in envelope');
         }
+    }
+    else {
+        res.status(404).send('Envelope with such name not found');
+    }
+})
+
+// transfer amount from one envelope to another
+app.post('/envelopes/transfer/:to/:from/:amount', (req, res, next) => {
+    const toName = req.params.to;
+    const fromName = req.params.from;
+    const amount = parseInt(req.params.amount);
+    const to = envelopes.find(envelope => envelope.name === toName);
+    const from = envelopes.find(envelope => envelope.name === fromName);
+    if (to && from) {
+        if (from.money >= amount) {
+            from.money -= amount;
+            to.money += amount;
+            res.status(200).send({to, from, "Transaction": "successful"})
+        }
+        else {
+            res.status(404).send('Amount exceeds money from giving envelope');
+        }
+    }
+    else {
+        res.status(404).send('One or both of the envelopes with such name(s) not found');
+    }
+})
+
+// deletes a specific envelope by name
+app.delete('/envelope/:name', (req, res, next) => {
+    const name = req.params.name;
+    const found = envelopes.find(envelope => envelope.name === name);
+    if (found) {
+        envelopes = envelopes.filter(envelope => envelope.name !== name);
+        res.status(200).send('Envelope has been deleted');
     }
     else {
         res.status(404).send('Envelope with such name not found');
