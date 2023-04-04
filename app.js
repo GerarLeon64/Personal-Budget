@@ -52,5 +52,24 @@ app.get('/envelope/:name', (req, res, next) => {
     }
 })
 
+// withdraws a certain amount from specified envelope
+app.put('/envelope/:name/:amount', (req, res, next) => {
+    const name = req.params.name;
+    const amount = req.params.amount;
+    const found = envelopes.find(envelope => envelope.name === name);
+    if (found) {
+        if (found.money >= amount) {
+            found.money -= amount;
+            res.send({found, 'Transaction': 'successful'})
+        }
+        else {
+            res.status(404).send('Amount to withdraw exceeds money in envelope');
+        }
+    }
+    else {
+        res.status(404).send('Envelope with such name not found');
+    }
+})
+
 const PORT = 3000;
 app.listen(PORT, console.log('Server listening on ' + PORT));
