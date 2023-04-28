@@ -1,9 +1,8 @@
+const { client } = require('./database'); // client for database queries
 const express = require('express');
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
-let envelopes = []; // individual budget envelopes (groceries, gas, clothing, etc)
-let totalBudget = 0; // total budget user is willing to spend
 
 // returns money from all envelopes
 const allMoney = () => {
@@ -11,39 +10,46 @@ const allMoney = () => {
     envelopes.forEach(envelope => sum += envelope.money);
     return sum;
 }
-// sets the total budget
-app.post('/totalBudget', (req, res, next) => {
-    const budget = req.body.budget;
-    if (budget > 0) { // total budget must be a positive number
-        totalBudget = budget;
-        res.sendStatus(201);
-    }
-    else {
-        res.status(404).send('Budget not valid');
-    }
-    next();
+// creates a new budget with id and total budget
+app.post('/budget', (req, res, next) => {
+    const budget = req.body;
+    client.query(`INSERT INTO budget VALUES (${budget.id}, ${budget.total});`, (err, result) => {
+        if (!err) {
+            res.send(result.rows);
+        }
+        client.end;
+    })
 })
 
-// creates a new envelope with name and money and adds it to the budget
+// retrieves all budgets
+app.get('/budgets', (req, res, next) => {
+    client.query('SELECT * FROM budget;', (err, result) => {
+        if (!err) {
+            res.send(result.rows);
+        }
+        client.end;
+    })
+})
+
+// creates a new envelope with id, name, money, and budget id
 app.post('/envelope', (req, res, next) => {
     const newEnvelope = req.body;
-    if (!newEnvelope) {
-        res.status(404).send('Envelope not valid');
-    }
-    else if ((allMoney() + newEnvelope.money) > totalBudget) { // new envelope must be within total budget
-        res.status(404).send('Envelope cannot be added, total budget would be exceeded');
-    }
-    else {
-        envelopes.push(newEnvelope);
-        res.sendStatus(201);
-    }
-    next();
+    client.query(`INSERT INTO envelope VALUES (${newEnvelope.id}, ${newEnvelope.budget_id}, ${newEnvelope.name}, ${newEnvelope.balance});`, (err, result) => {
+        if (!err) {
+            res.send(result.rows);
+        }
+        client.end;
+    })
 })
 
 // retrieves all envelopes
 app.get('/envelopes', (req, res, next) => {
-    res.send(envelopes);
-    next();
+    client.query('SELECT * FROM envelope', (err, result) => {
+        if (!err) {
+            res.send(result.rows);
+        }
+        client.end
+    })
 })
 
 // retrieves an envelope by its name and total budget
@@ -114,3 +120,5 @@ app.delete('/envelope/:name', (req, res, next) => {
 
 const PORT = 3000;
 app.listen(PORT, console.log('Server listening on ' + PORT));
+
+client.connect();

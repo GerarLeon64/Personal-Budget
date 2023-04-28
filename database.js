@@ -8,14 +8,6 @@ const client = new Client({
     database: 'budget'
   });
 
-client.connect();
-
-client.query('SELECT * FROM budget', (err, res) => {
-    if (err) {
-        throw new Error('Query did not work');
-    }
-    else {
-        console.log(res.rows);
-    }
-    client.end;
-});
+module.exports = {
+    client
+};
