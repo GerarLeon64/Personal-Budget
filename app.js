@@ -1,15 +1,11 @@
 const { client } = require('./database'); // client for database queries
 const express = require('express');
 const app = express();
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
-// returns money from all envelopes
-const allMoney = () => {
-    let sum = 0;
-    envelopes.forEach(envelope => sum += envelope.money);
-    return sum;
-}
 // creates a new budget with id and total budget
 app.post('/budget', (req, res, next) => {
     const budget = req.body;
@@ -44,47 +40,47 @@ app.post('/envelope', (req, res, next) => {
 
 // retrieves all envelopes
 app.get('/envelopes', (req, res, next) => {
-    client.query('SELECT * FROM envelope', (err, result) => {
+    client.query('SELECT * FROM envelope;', (err, result) => {
         if (!err) {
             res.send(result.rows);
         }
-        client.end
+        client.end;
     })
 })
 
-// retrieves an envelope by its name and total budget
-app.get('/envelope/:name', (req, res, next) => {
-    const name = req.params.name;
-    const found = envelopes.find(envelope => envelope.name === name);
-    if (found) {
-        res.send({found, 'Total budget': totalBudget});
-    }
-    else {
-        res.status(404).send('Envelope with such name not found');
-    }
+// retrieves an envelope by its id
+app.get('/envelope/:id/', (req, res, next) => {
+    const id = req.params.id;
+    const budgetId = req.params.budgetid;
+    client.query(`SELECT * FROM envelope WHERE id = ${id};`, (err, result) => {
+        if (!err) {
+            res.send(result.rows);
+        }
+        client.end;
+    })
 })
 
 // withdraws a certain amount from specified envelope
-app.put('/envelope/:name/:amount', (req, res, next) => {
-    const name = req.params.name;
-    const amount = parseInt(req.params.amount);
-    const found = envelopes.find(envelope => envelope.name === name);
-    if (found) {
-        if (found.money >= amount) {
-            found.money -= amount;
-            res.send({found, 'Transaction': 'successful'})
-        }
-        else {
-            res.status(404).send('Amount to withdraw exceeds money in envelope');
-        }
+app.put('/envelope/:amount', (req, res, next) => {
+    const envelope = req.body;
+    const amount = req.params.amount;
+    const newBalance = envelope.balance - amount;
+    if (newBalance >= 0){
+        client.query(`UPDATE envelope SET budget_id = ${envelope.budget_id}, name = ${envelope.name}, balance = ${newBalance} WHERE id = ${id};`, (err, result) => {
+            if (!err) {
+                res.send(result.rows);
+            }
+            client.end;
+        })
+
     }
     else {
-        res.status(404).send('Envelope with such name not found');
+        res.send('Amount to withdraw exceeds balance');
     }
 })
 
 // transfer amount from one envelope to another
-app.post('/envelopes/transfer/:to/:from/:amount', (req, res, next) => {
+app.put('/envelopes/transfer/:to/:from/:amount', (req, res, next) => {
     const toName = req.params.to;
     const fromName = req.params.from;
     const amount = parseInt(req.params.amount);
