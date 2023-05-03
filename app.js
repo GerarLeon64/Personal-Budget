@@ -1,15 +1,12 @@
 const { client } = require('./database'); // client for database queries
 const express = require('express');
 const app = express();
-const bodyParser = require('body-parser');
-app.use(bodyParser.json());
 app.use(express.json());
-app.use(bodyParser.urlencoded({extended: false}));
 
 // creates a new budget with id and total budget
 app.post('/budget', (req, res, next) => {
     const budget = req.body;
-    client.query(`INSERT INTO budget VALUES (${budget.id}, ${budget.total})`, (err, result) => {
+    client.query(`INSERT INTO budget VALUES (${budget.id}, ${budget.id})`, (err, result) => {
         if (!err) {
             res.send(result.rows);
         }
