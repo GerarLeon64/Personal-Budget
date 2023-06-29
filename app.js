@@ -4,21 +4,30 @@ const app = express();
 app.use(express.json());
 
 // creates a new budget with id and total budget
-app.post('/budget', (req, res, next) => {
-    const budget = req.body;
-    client.query(`INSERT INTO budget VALUES (${budget.id}, ${budget.id})`, (err, result) => {
+app.post('/budgets', (req, res) => {
+    const id = req.body.id;
+    const total = req.body.total;
+    client.query(`INSERT INTO budget (id, total) VALUES (${id}, ${total})`,
+      (err, result) => {
         if (!err) {
             res.send(result.rows);
+        }
+        else {
+            console.log(err);
         }
         client.end;
     })
 })
+
 
 // retrieves all budgets
 app.get('/budgets', (req, res, next) => {
     client.query('SELECT * FROM budget', (err, result) => {
         if (!err) {
             res.send(result.rows);
+        }
+        else {
+            console.log(err);
         }
         client.end;
     })
@@ -31,6 +40,9 @@ app.post('/envelope', (req, res, next) => {
         if (!err) {
             res.send(result.rows);
         }
+        else {
+            console.log(err);
+        }
         client.end;
     })
 })
@@ -40,6 +52,9 @@ app.get('/envelopes', (req, res, next) => {
     client.query('SELECT * FROM envelope', (err, result) => {
         if (!err) {
             res.send(result.rows);
+        }
+        else {
+            console.log(err);
         }
         client.end;
     })
@@ -53,6 +68,9 @@ app.get('/envelope/:id/', (req, res, next) => {
         if (!err) {
             res.send(result.rows);
         }
+        else {
+            console.log(err);
+        }
         client.end;
     })
 })
@@ -64,6 +82,9 @@ app.put('/envelope/:amount/:id', (req, res, next) => {
     client.query(`UPDATE envelope SET balance = (balance - ${amount}) WHERE id = ${id}`, (err, result) => {
         if (!err) {
             res.send(result.rows);
+        }
+        else {
+            console.log(err);
         }
         client.end;
     })
@@ -78,11 +99,17 @@ app.put('/envelopes/transfer/:to/:from/:amount', (req, res, next) => {
         if (!err) {
             res.send(result.rows);
         }
+        else {
+            console.log(err);
+        }
         client.end;
     })
     client.query(`UPDATE envelope SET balance = (balance + ${amount}) WHERE id = ${destinationId}`, (err, result) => {
         if (!err) {
             res.send(result.rows);
+        }
+        else {
+            console.log(err);
         }
         client.end;
     })
@@ -95,16 +122,21 @@ app.delete('/envelope/:id', (req, res, next) => {
         if (!err) {
             res.send(result.rows);
         }
+        else {
+            console.log(err);
+        }
         client.end;
     })
 })
 
 // deletes a specific budget by id
 app.delete('/budget/:id', (req, res, next) => {
-    const id = req.params.id;
-    client.query(`DELETE FROM budget WHERE id = ${id}`, (err, result) => {
+    client.query('DELETE FROM budget WHERE id = ?', [req.params.id], (err, result) => {
         if (!err) {
             res.send(result.rows);
+        }
+        else {
+            console.log(err);
         }
         client.end;
     })
