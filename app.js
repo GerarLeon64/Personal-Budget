@@ -4,6 +4,7 @@ const app = express();
 app.use(express.json());
 
 // creates a new budget with id and total budget
+// works
 app.post('/budgets', (req, res) => {
     const id = req.body.id;
     const total = req.body.total;
@@ -21,6 +22,7 @@ app.post('/budgets', (req, res) => {
 
 
 // retrieves all budgets
+// works
 app.get('/budgets', (req, res, next) => {
     client.query('SELECT * FROM budget', (err, result) => {
         if (!err) {
@@ -34,9 +36,14 @@ app.get('/budgets', (req, res, next) => {
 })
 
 // creates a new envelope with id, budget_id, name, and balance
-app.post('/envelope', (req, res, next) => {
-    const newEnvelope = req.body;
-    client.query(`INSERT INTO envelope VALUES (${newEnvelope.id}, ${newEnvelope.budget_id}, ${newEnvelope.name}, ${newEnvelope.balance})`, (err, result) => {
+// work
+app.post('/envelope', (req, res) => {
+    const id = req.body.id;
+    const budget_id = req.body.budget_id;
+    const name = req.body.name;
+    const balance = req.body.balance;
+    client.query(`INSERT INTO envelope VALUES (${id}, ${budget_id}, '${name}', ${balance})`, 
+    (err, result) => {
         if (!err) {
             res.send(result.rows);
         }
@@ -48,6 +55,7 @@ app.post('/envelope', (req, res, next) => {
 })
 
 // retrieves all envelopes
+// works
 app.get('/envelopes', (req, res, next) => {
     client.query('SELECT * FROM envelope', (err, result) => {
         if (!err) {
@@ -63,7 +71,6 @@ app.get('/envelopes', (req, res, next) => {
 // retrieves an envelope by its id
 app.get('/envelope/:id/', (req, res, next) => {
     const id = req.params.id;
-    const budgetId = req.params.budgetid;
     client.query(`SELECT * FROM envelope WHERE id = ${id}`, (err, result) => {
         if (!err) {
             res.send(result.rows);
@@ -76,10 +83,13 @@ app.get('/envelope/:id/', (req, res, next) => {
 })
 
 // withdraws a certain amount from specified envelope
+// works
 app.put('/envelope/:amount/:id', (req, res, next) => {
     const id = req.params.id;
     const amount = parseFloat(req.params.amount);
-    client.query(`UPDATE envelope SET balance = (balance - ${amount}) WHERE id = ${id}`, (err, result) => {
+    const balance = client.query(`SELECT balance FROM envelope WHERE id = ${id}`);
+    const newBalance = parseFloat(balance) - amount;
+    client.query(`UPDATE envelope SET balance = ${newBalance} WHERE id = ${id}`, (err, result) => {
         if (!err) {
             res.send(result.rows);
         }
@@ -95,7 +105,9 @@ app.put('/envelopes/transfer/:to/:from/:amount', (req, res, next) => {
     const sourceId = req.params.from;
     const destinationId = req.params.to;
     const amount = parseFloat(req.params.amount);
-    client.query(`UPDATE envelope SET balance = (balance - ${amount}) WHERE id = ${sourceId}`, (err, result) => {
+    const balanceOfDest = client.query(`SELECT balance FROM envelope WHERE id = ${destinationId}`);
+    const newBalanceOfDest = parseFloat(balanceOfDest) + amount;
+    client.query(`UPDATE envelope SET balance = ${newBalanceOfDest} WHERE id = ${destinationId}`, (err, result) => {
         if (!err) {
             res.send(result.rows);
         }
@@ -104,7 +116,9 @@ app.put('/envelopes/transfer/:to/:from/:amount', (req, res, next) => {
         }
         client.end;
     })
-    client.query(`UPDATE envelope SET balance = (balance + ${amount}) WHERE id = ${destinationId}`, (err, result) => {
+    const balanceOfSource = client.query(`SELECT balance FROM envelope WHERE id = ${sourceId}`);
+    const newBalanceOfSource = parseFloat(balanceOfSource) - amount;
+    client.query(`UPDATE envelope SET balance = ${newBalanceOfSource} WHERE id = ${sourceId}`, (err, result) => {
         if (!err) {
             res.send(result.rows);
         }
@@ -113,6 +127,7 @@ app.put('/envelopes/transfer/:to/:from/:amount', (req, res, next) => {
         }
         client.end;
     })
+
 })
 
 // deletes a specific envelope by id
