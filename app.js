@@ -5,7 +5,7 @@ app.use(express.json());
 
 // creates a new budget with id and total budget
 // works
-app.post('/budgets', (req, res) => {
+app.post('/budget', (req, res) => {
     const id = req.body.id;
     const total = req.body.total;
     client.query(`INSERT INTO budget (id, total) VALUES (${id}, ${total})`,
@@ -22,7 +22,7 @@ app.post('/budgets', (req, res) => {
 
 // retrieves all budgets
 // works
-app.get('/budgets', (req, res, next) => {
+app.get('/budget', (req, res, next) => {
     client.query('SELECT * FROM budget', (err, result) => {
         if (!err) {
             res.send(result.rows);
@@ -68,7 +68,7 @@ app.post('/envelope', (req, res) => {
 
 // retrieves all envelopes
 // works
-app.get('/envelopes', (req, res, next) => {
+app.get('/envelope', (req, res, next) => {
     client.query('SELECT * FROM envelope', (err, result) => {
         if (!err) {
             res.send(result.rows);
@@ -129,7 +129,7 @@ app.delete('/envelope/:id', (req, res, next) => {
 
 // retrieves all transactions
 // works
-app.get('/transactions', (req, res) => {
+app.get('/transaction', (req, res) => {
     client.query('SELECT * FROM transaction', (err, result) => {
         if (!err) {
             res.send(result.rows);
