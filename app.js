@@ -20,7 +20,6 @@ app.post('/budgets', (req, res) => {
     })
 })
 
-
 // retrieves all budgets
 // works
 app.get('/budgets', (req, res, next) => {
@@ -35,6 +34,19 @@ app.get('/budgets', (req, res, next) => {
     })
 })
 
+// deletes a specific budget by id
+// works
+app.delete('/budget/:id', (req, res, next) => {
+    client.query('DELETE FROM budget WHERE id = ?', [req.params.id], (err, result) => {
+        if (!err) {
+            res.send(result.rows);
+        }
+        else {
+            console.log(err);
+        }
+        client.end;
+    })
+})
 // creates a new envelope with id, budget_id, name, and balance
 // work
 app.post('/envelope', (req, res) => {
@@ -100,8 +112,37 @@ app.put('/envelope/:amount/:id', (req, res, next) => {
     })
 })
 
-// transfer amount from one envelope to another based on their ids
-app.put('/envelopes/transfer/:to/:from/:amount', (req, res, next) => {
+// deletes a specific envelope by id
+// works
+app.delete('/envelope/:id', (req, res, next) => {
+    const id = req.params.id;
+    client.query(`DELETE FROM envelope WHERE id = ${id}`, (err, result) => {
+        if (!err) {
+            res.send(result.rows);
+        }
+        else {
+            console.log(err);
+        }
+        client.end;
+    })
+})
+
+// retrieves all transactions
+// works
+app.get('/transactions', (req, res) => {
+    client.query('SELECT * FROM transaction', (err, result) => {
+        if (!err) {
+            res.send(result.rows);
+        }
+        else {
+            console.log(err);
+        }
+    })
+})
+
+// creates a transaction between two envelopes based on their ids
+// works
+app.post('/transaction/:id/:to/:from/:amount', (req, res, next) => {
     const sourceId = req.params.from;
     const destinationId = req.params.to;
     const amount = parseFloat(req.params.amount);
@@ -127,13 +168,25 @@ app.put('/envelopes/transfer/:to/:from/:amount', (req, res, next) => {
         }
         client.end;
     })
+    const transactionId = req.params.id; 
+    client.query(`INSERT INTO transaction VALUES (${transactionId}, 'now', ${amount}, ${destinationId}, ${sourceId})`,
+    (err, result) => {
+        if (!err) {
+            res.send(result.rows);
+        }
+        else {
+            console.log(err);
+        }
+        client.end;
+    })
 
 })
 
-// deletes a specific envelope by id
-app.delete('/envelope/:id', (req, res, next) => {
+// deletes a specific transaction by id
+// works
+app.delete('/transaction/:id', (req, res, next) => {
     const id = req.params.id;
-    client.query(`DELETE FROM envelope WHERE id = ${id}`, (err, result) => {
+    client.query(`DELETE FROM transaction WHERE id = ${id}`, (err, result) => {
         if (!err) {
             res.send(result.rows);
         }
@@ -143,20 +196,6 @@ app.delete('/envelope/:id', (req, res, next) => {
         client.end;
     })
 })
-
-// deletes a specific budget by id
-app.delete('/budget/:id', (req, res, next) => {
-    client.query('DELETE FROM budget WHERE id = ?', [req.params.id], (err, result) => {
-        if (!err) {
-            res.send(result.rows);
-        }
-        else {
-            console.log(err);
-        }
-        client.end;
-    })
-})
-
 const PORT = 3000;
 app.listen(PORT, console.log('Server listening on ' + PORT));
 
